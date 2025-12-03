@@ -155,11 +155,6 @@ idf.py monitor
 - Verifique fiação (SDA/SCL corretos)
 - Sensor pode travar após uso prolongado (auto-recovery implementado após 3 timeouts)
 
-### LED RGB cores erradas
-- Verifique se é Common Anode (pino comum no 3.3V)
-- Confirme resistores de 220Ω em cada canal (R, G, B)
-- GPIO27, 25, 26 podem ter vazamento dependendo do LED - ajuste valores RGB no código
-
 ### Display OLED não inicializa
 - Confirme endereço 0x3C (alguns modelos usam 0x3D)
 - Verifique alimentação 3.3V (não 5V!)
@@ -189,6 +184,7 @@ Este projeto utiliza componentes com diferentes licenças:
 
 ## 👨‍💻 Autor
 
+Maria Eduarda Araujo
 Desenvolvido com ESP32 - Sistema de monitoramento inteligente de plantas.
 
 ## 🙏 Agradecimentos
@@ -196,6 +192,7 @@ Desenvolvido com ESP32 - Sistema de monitoramento inteligente de plantas.
 - Driver VL53L0X baseado no trabalho de [revk/ESP32-VL53L0X](https://github.com/revk/ESP32-VL53L0X)
 - Espressif ESP-IDF framework
 - Comunidade ESP32 Brasil
+- Fundamentos de sistemas embarcados - Renato FCTE (UNB) 2025.2
 
 ---
 
