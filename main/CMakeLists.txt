@@ -1,0 +1,4 @@
+idf_component_register(SRCS "blink_example_main.c"
+                    INCLUDE_DIRS "."
+                    PRIV_REQUIRES driver
+                    REQUIRES vl53l0x ssd1306)

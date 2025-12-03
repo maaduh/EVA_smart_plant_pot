@@ -1,0 +1,27 @@
+# Build artifacts
+build/
+managed_components/
+dependencies.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ESP-IDF
+sdkconfig.old
+*.bin
+*.elf
+*.map
+
+# OS
+.DS_Store
+Thumbs.db
