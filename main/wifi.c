@@ -13,8 +13,8 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#define WIFI_SSID      "Marco2g_EXT"
-#define WIFI_PASS      "Pedro2005tulio1@"
+#define WIFI_SSID      "FSE-WiFi"
+#define WIFI_PASS      "FSE-2023"
 #define WIFI_MAXIMUM_RETRY  5
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
