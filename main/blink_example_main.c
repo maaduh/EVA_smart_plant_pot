@@ -75,6 +75,13 @@
 #include "sdkconfig.h"
 #include "vl53l0x.h"
 #include "ssd1306.h"
+#include "nvs_flash.h"
+#include "cJSON.h"
+#include "wifi.h"
+#include "mqtt.h"
+
+SemaphoreHandle_t conexaoWifiSemaphore;
+SemaphoreHandle_t conexaoMQTTSemaphore;
 
 // ===== CONFIGURAÇÃO I2C =====
 #define I2C_MASTER_SCL_IO    22
@@ -373,6 +380,22 @@ static void scan_i2c_bus(void)
 
 void app_main(void)
 {
+    esp_err_t ret_nvs = nvs_flash_init();
+    if (ret_nvs == ESP_ERR_NVS_NO_FREE_PAGES || ret_nvs == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret_nvs = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret_nvs);
+
+    // Cria os semáforos
+    conexaoWifiSemaphore = xSemaphoreCreateBinary();
+    conexaoMQTTSemaphore = xSemaphoreCreateBinary();
+
+    // Inicia Wi-Fi e MQTT
+    wifi_start();
+    // Nota: O mqtt_start vai tentar conectar, mas só conseguirá quando o Wi-Fi subir.
+    // O código do mqtt.c gerencia isso internamente ou podemos esperar o wifi antes.
+    mqtt_start();
     ESP_LOGI(TAG, "");
     ESP_LOGI(TAG, "╔═══════════════════════════════════════════════════════════════╗");
     ESP_LOGI(TAG, "║           SMART PLANT IVY - Sistema Iniciando                 ║");
@@ -538,6 +561,35 @@ void app_main(void)
         update_plant_status(&status);
         
         if (cycle_count % 10 == 0) {
+            if(xSemaphoreTake(conexaoMQTTSemaphore, pdMS_TO_TICKS(100))) {
+                
+                // Cria o objeto JSON
+                cJSON *root = cJSON_CreateObject();
+                cJSON_AddNumberToObject(root, "temperatura", status.temperature);
+                cJSON_AddNumberToObject(root, "umidade", status.humidity);
+                cJSON_AddNumberToObject(root, "luminosidade", status.lux);
+                cJSON_AddNumberToObject(root, "nivel_agua_mm", status.water_distance_mm);
+                
+                // Adiciona status booleanos (0 ou 1) para facilitar gráficos
+                cJSON_AddBoolToObject(root, "alerta_agua", !status.water_ok);
+                
+                // Converte o JSON para string
+                char *json_string = cJSON_PrintUnformatted(root);
+                
+                // Envia para o tópico de telemetria do ThingsBoard
+                mqtt_envia_mensagem("v1/devices/me/telemetry", json_string);
+                
+                ESP_LOGI(TAG, "📡 Dados enviados para o ThingsBoard!");
+
+                // Limpa a memória (MUITO IMPORTANTE para não travar o ESP32)
+                free(json_string);
+                cJSON_Delete(root);
+                
+                // Devolve o semáforo para indicar que a conexão ainda existe/está livre
+                xSemaphoreGive(conexaoMQTTSemaphore);
+            } else {
+                ESP_LOGW(TAG, "📡 MQTT desconectado - Tentando reconectar ou aguardando...");
+            }
             ESP_LOGI(TAG, "");
             ESP_LOGI(TAG, " Status da Planta #%lu:", cycle_count / 10);
             ESP_LOGI(TAG, "     Temperatura: %.1f°C %s (%.1f~%.1f°C)", 
